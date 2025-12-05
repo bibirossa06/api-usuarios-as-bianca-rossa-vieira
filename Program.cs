@@ -9,19 +9,17 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// DbContext: SQLite
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=app.db"));
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db";
 
-// DI: Repository e Service
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
+
 builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddScoped<IUsuarioService, UsuarioService>();
 
-// Validators
 builder.Services.AddScoped<IValidator<UsuarioCreateDto>, UsuarioCreateDtoValidator>();
 builder.Services.AddScoped<IValidator<UsuarioUpdateDto>, UsuarioUpdateDtoValidator>();
 
@@ -67,7 +65,7 @@ app.MapPost("/usuarios", async (
     }
     catch (InvalidOperationException ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.Conflict(new { error = ex.Message });
     }
 });
 
@@ -88,7 +86,7 @@ app.MapPut("/usuarios/{id:int}", async (
     }
     catch (InvalidOperationException ex)
     {
-        return Results.BadRequest(new { error = ex.Message });
+        return Results.Conflict(new { error = ex.Message });
     }
 });
 
